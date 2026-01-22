@@ -1,65 +1,71 @@
 import 'package:phishleak_guard/models/phishing_analysis_result.dart';
+import 'package:phishleak_guard/openai/openai_config.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
 
-/// Service for detecting phishing attempts
+/// Service for detecting phishing attempts using AI
 class PhishingDetectionService {
   static const _uuid = Uuid();
 
-  // Suspicious domain patterns
-  static final List<String> _suspiciousDomains = [
-    'paypa1', 'amaz0n', 'micros0ft', 'app1e', 'g00gle', 'faceb00k',
-    'netf1ix', 'bankofamer1ca', 'wel1sfargo', 'ch4se',
-  ];
-
-  // Suspicious TLDs
-  static final List<String> _suspiciousTlds = [
-    '.tk', '.ml', '.ga', '.cf', '.gq', '.xyz', '.top', '.click',
-  ];
-
-  // Phishing keywords
-  static final List<String> _phishingKeywords = [
-    'verify account', 'urgent action', 'suspended account', 'confirm identity',
-    'click here immediately', 'prize winner', 'claim reward', 'reset password',
-    'unusual activity', 'security alert', 'limited time', 'act now',
-    'verify your information', 'update payment', 'confirm your account',
-  ];
-
-  // Generic greetings (suspicious)
-  static final List<String> _genericGreetings = [
-    'dear customer', 'dear user', 'dear member', 'valued customer',
-    'dear sir/madam', 'hello user',
-  ];
-
-  /// Analyze content for phishing indicators
+  /// Analyze content for phishing indicators using OpenAI
   Future<PhishingAnalysisResult> analyzeContent({
     required String content,
     required String inputType,
   }) async {
-    // Simulate processing delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Call OpenAI API for intelligent analysis
+      final analysis = await OpenAIConfig.analyzePhishing(content, inputType);
 
+      // Parse the response
+      final isSafe = analysis['isSafe'] as bool? ?? true;
+      final riskScore = (analysis['riskScore'] as num?)?.toInt() ?? 0;
+      final severity = analysis['severity'] as String? ?? 'Low';
+      
+      // Parse threats
+      final threats = <ThreatFlag>[];
+      final threatsData = analysis['threats'] as List<dynamic>? ?? [];
+      
+      for (final threat in threatsData) {
+        if (threat is Map<String, dynamic>) {
+          threats.add(ThreatFlag(
+            type: threat['type'] as String? ?? 'unknown',
+            title: threat['title'] as String? ?? 'Security Issue',
+            description: threat['description'] as String? ?? 'Potential security concern detected',
+            severity: threat['severity'] as String? ?? 'Medium',
+          ));
+        }
+      }
+
+      return PhishingAnalysisResult(
+        id: _uuid.v4(),
+        inputType: inputType,
+        content: content,
+        riskScore: riskScore,
+        severity: severity,
+        isSafe: isSafe,
+        threats: threats,
+        analyzedAt: DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('Error analyzing content with AI: $e');
+      
+      // Fallback to basic pattern matching if API fails
+      return _fallbackAnalysis(content, inputType);
+    }
+  }
+
+  /// Fallback analysis using basic pattern matching
+  PhishingAnalysisResult _fallbackAnalysis(String content, String inputType) {
     final threats = <ThreatFlag>[];
     final contentLower = content.toLowerCase();
 
-    // Check for suspicious domains
+    // Basic checks
     _checkDomains(content, threats);
-
-    // Check for phishing keywords
     _checkKeywords(contentLower, threats);
-
-    // Check for generic greetings
-    _checkGreetings(contentLower, threats);
-
-    // Check for URLs
     _checkUrls(content, threats);
-
-    // Check for urgency
     _checkUrgency(contentLower, threats);
-
-    // Check for requests for credentials
     _checkCredentialRequests(contentLower, threats);
 
-    // Calculate risk score based on threats
     final riskScore = _calculateRiskScore(threats);
     final severity = _calculateSeverity(riskScore);
     final isSafe = riskScore < 30;
@@ -75,6 +81,25 @@ class PhishingDetectionService {
       analyzedAt: DateTime.now(),
     );
   }
+
+  // Suspicious domain patterns
+  static final List<String> _suspiciousDomains = [
+    'paypa1', 'amaz0n', 'micros0ft', 'app1e', 'g00gle', 'faceb00k',
+    'netf1ix', 'bankofamer1ca', 'wel1sfargo', 'ch4se', 'paypai',
+  ];
+
+  // Suspicious TLDs
+  static final List<String> _suspiciousTlds = [
+    '.tk', '.ml', '.ga', '.cf', '.gq', '.xyz', '.top', '.click',
+  ];
+
+  // Phishing keywords
+  static final List<String> _phishingKeywords = [
+    'verify account', 'urgent action', 'suspended account', 'confirm identity',
+    'click here immediately', 'prize winner', 'claim reward', 'reset password',
+    'unusual activity', 'security alert', 'limited time', 'act now',
+    'verify your information', 'update payment', 'confirm your account',
+  ];
 
   void _checkDomains(String content, List<ThreatFlag> threats) {
     for (final suspicious in _suspiciousDomains) {
@@ -99,7 +124,6 @@ class PhishingDetectionService {
       }
     }
 
-    // Check for IP address in URL
     final ipPattern = RegExp(r'https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}');
     if (ipPattern.hasMatch(content)) {
       threats.add(ThreatFlag(
@@ -120,27 +144,12 @@ class PhishingDetectionService {
           description: 'Contains common phishing phrase: "$keyword"',
           severity: 'Medium',
         ));
-        break; // Only add one keyword threat
-      }
-    }
-  }
-
-  void _checkGreetings(String content, List<ThreatFlag> threats) {
-    for (final greeting in _genericGreetings) {
-      if (content.contains(greeting)) {
-        threats.add(ThreatFlag(
-          type: 'content',
-          title: 'Generic Greeting',
-          description: 'Uses generic greeting instead of your name',
-          severity: 'Low',
-        ));
         break;
       }
     }
   }
 
   void _checkUrls(String content, List<ThreatFlag> threats) {
-    // Check for shortened URLs
     final shortenedUrlPattern = RegExp(
       r'(bit\.ly|tinyurl\.com|goo\.gl|t\.co|ow\.ly|is\.gd)',
       caseSensitive: false,
@@ -154,7 +163,6 @@ class PhishingDetectionService {
       ));
     }
 
-    // Check for multiple URLs (suspicious)
     final urlPattern = RegExp(r'https?://[^\s]+');
     final urlMatches = urlPattern.allMatches(content);
     if (urlMatches.length > 3) {

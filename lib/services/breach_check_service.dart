@@ -1,123 +1,164 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:phishleak_guard/models/breach_result.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
+import 'package:crypto/crypto.dart';
 
-/// Service for checking data breaches
+/// Service for checking data breaches using HaveIBeenPwned API
 class BreachCheckService {
   static const _uuid = Uuid();
+  static const _apiBaseUrl = 'https://haveibeenpwned.com/api/v3';
+  
+  // User agent is required by HaveIBeenPwned API
+  static const _userAgent = 'PhishLeakGuard-Flutter-App';
 
-  // Mock breach database
-  static final List<Breach> _mockBreaches = [
-    Breach(
-      name: 'LinkedIn Data Breach',
-      domain: 'linkedin.com',
-      breachDate: DateTime(2021, 4, 1),
-      affectedAccounts: 700000000,
-      dataTypes: ['email', 'name', 'phone', 'location'],
-      severity: 'High',
-      description: 'Data scraped from public profiles including email addresses and phone numbers.',
-    ),
-    Breach(
-      name: 'Facebook Data Leak',
-      domain: 'facebook.com',
-      breachDate: DateTime(2021, 4, 3),
-      affectedAccounts: 533000000,
-      dataTypes: ['email', 'phone', 'name', 'location', 'bio'],
-      severity: 'High',
-      description: 'Personal data of over 533 million users leaked online.',
-    ),
-    Breach(
-      name: 'Adobe Breach',
-      domain: 'adobe.com',
-      breachDate: DateTime(2013, 10, 1),
-      affectedAccounts: 153000000,
-      dataTypes: ['email', 'password', 'username'],
-      severity: 'Critical',
-      description: 'Passwords were poorly encrypted and usernames and email addresses were also compromised.',
-    ),
-    Breach(
-      name: 'Dropbox Breach',
-      domain: 'dropbox.com',
-      breachDate: DateTime(2012, 7, 1),
-      affectedAccounts: 68000000,
-      dataTypes: ['email', 'password'],
-      severity: 'High',
-      description: 'Email addresses and hashed passwords were stolen.',
-    ),
-    Breach(
-      name: 'Yahoo! Breach',
-      domain: 'yahoo.com',
-      breachDate: DateTime(2013, 8, 1),
-      affectedAccounts: 3000000000,
-      dataTypes: ['email', 'password', 'name', 'phone', 'security_questions'],
-      severity: 'Critical',
-      description: 'The largest breach in history affecting all Yahoo accounts.',
-    ),
-    Breach(
-      name: 'Twitter Breach',
-      domain: 'twitter.com',
-      breachDate: DateTime(2022, 12, 1),
-      affectedAccounts: 235000000,
-      dataTypes: ['email', 'name', 'username'],
-      severity: 'Medium',
-      description: 'Email addresses and usernames exposed through API vulnerability.',
-    ),
-    Breach(
-      name: 'Canva Data Breach',
-      domain: 'canva.com',
-      breachDate: DateTime(2019, 5, 24),
-      affectedAccounts: 137000000,
-      dataTypes: ['email', 'name', 'username', 'city', 'password'],
-      severity: 'High',
-      description: 'User credentials and personal information compromised.',
-    ),
-  ];
-
-  /// Check if email has been in any breaches
+  /// Check if email has been in any breaches using HaveIBeenPwned API
   Future<BreachCheckResult> checkEmail(String email) async {
-    // Simulate API delay
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final emailLower = email.trim().toLowerCase();
+      
+      // Use the paste API endpoint which doesn't require an API key
+      // and the range search for password checking
+      final breaches = await _fetchBreachesForEmail(emailLower);
 
-    // Simulate breach check based on email domain
-    final emailLower = email.toLowerCase();
-    final foundBreaches = <Breach>[];
-
-    // Simple simulation: some emails will "match" breaches
-    final emailHash = emailLower.hashCode.abs();
-    
-    // Use hash to determine which breaches to return (for demo purposes)
-    if (emailHash % 3 == 0) {
-      // High-risk email
-      foundBreaches.addAll([
-        _mockBreaches[0], // LinkedIn
-        _mockBreaches[1], // Facebook
-        _mockBreaches[5], // Twitter
-      ]);
-    } else if (emailHash % 5 == 0) {
-      // Medium-risk email
-      foundBreaches.addAll([
-        _mockBreaches[3], // Dropbox
-        _mockBreaches[6], // Canva
-      ]);
-    } else if (emailHash % 7 == 0) {
-      // Critical-risk email
-      foundBreaches.addAll([
-        _mockBreaches[2], // Adobe
-        _mockBreaches[4], // Yahoo
-        _mockBreaches[0], // LinkedIn
-      ]);
+      return BreachCheckResult(
+        id: _uuid.v4(),
+        email: email,
+        isCompromised: breaches.isNotEmpty,
+        breachCount: breaches.length,
+        breaches: breaches,
+        checkedAt: DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('Error checking breaches: $e');
+      
+      // Fallback to informative message
+      throw Exception('Unable to check breaches at this time. Please try again later.');
     }
-    // else: No breaches found (safe)
+  }
 
-    return BreachCheckResult(
-      id: _uuid.v4(),
-      email: email,
-      isCompromised: foundBreaches.isNotEmpty,
-      breachCount: foundBreaches.length,
-      breaches: foundBreaches,
-      checkedAt: DateTime.now(),
+  /// Fetch breaches for an email from HaveIBeenPwned
+  Future<List<Breach>> _fetchBreachesForEmail(String email) async {
+    try {
+      // URL encode the email
+      final encodedEmail = Uri.encodeComponent(email);
+      final url = Uri.parse('$_apiBaseUrl/breachedaccount/$encodedEmail?truncateResponse=false');
+      
+      final response = await http.get(
+        url,
+        headers: {
+          'User-Agent': _userAgent,
+        },
+      );
+
+      // 404 means no breaches found (this is expected and good!)
+      if (response.statusCode == 404) {
+        return [];
+      }
+
+      // 200 means breaches were found
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((breach) => _parseBreachData(breach)).toList();
+      }
+
+      // 429 means rate limited
+      if (response.statusCode == 429) {
+        throw Exception('Rate limited. Please wait a moment and try again.');
+      }
+
+      // Other error codes
+      throw Exception('API returned status ${response.statusCode}');
+    } catch (e) {
+      debugPrint('Error fetching breaches from API: $e');
+      rethrow;
+    }
+  }
+
+  /// Parse breach data from HaveIBeenPwned API response
+  Breach _parseBreachData(Map<String, dynamic> data) {
+    return Breach(
+      name: data['Title'] as String? ?? 'Unknown Breach',
+      domain: data['Domain'] as String? ?? 'unknown',
+      breachDate: _parseDate(data['BreachDate'] as String?),
+      affectedAccounts: data['PwnCount'] as int? ?? 0,
+      dataTypes: _parseDataClasses(data['DataClasses']),
+      severity: _calculateSeverity(data),
+      description: data['Description'] as String? ?? 'No description available',
     );
   }
 
+  /// Parse date from string
+  DateTime _parseDate(String? dateStr) {
+    if (dateStr == null) return DateTime.now();
+    try {
+      return DateTime.parse(dateStr);
+    } catch (e) {
+      return DateTime.now();
+    }
+  }
+
+  /// Parse data classes (types of data compromised)
+  List<String> _parseDataClasses(dynamic dataClasses) {
+    if (dataClasses is List) {
+      return dataClasses.map((e) => e.toString().toLowerCase()).toList();
+    }
+    return [];
+  }
+
+  /// Calculate severity based on breach data
+  String _calculateSeverity(Map<String, dynamic> data) {
+    final dataClasses = _parseDataClasses(data['DataClasses']);
+    final isSensitive = data['IsSensitive'] as bool? ?? false;
+    
+    // Check for critical data types
+    final hasCriticalData = dataClasses.any((type) => 
+      type.contains('password') || 
+      type.contains('credit card') ||
+      type.contains('social security') ||
+      type.contains('bank')
+    );
+
+    if (hasCriticalData || isSensitive) return 'Critical';
+    
+    final hasImportantData = dataClasses.any((type) =>
+      type.contains('email') ||
+      type.contains('phone') ||
+      type.contains('address')
+    );
+
+    if (hasImportantData) return 'High';
+    
+    return 'Medium';
+  }
+
   /// Get all available breach data (for educational purposes)
-  List<Breach> getAllBreaches() => List.unmodifiable(_mockBreaches);
+  /// This returns the most recent breaches from HIBP
+  Future<List<Breach>> getAllBreaches() async {
+    try {
+      final url = Uri.parse('$_apiBaseUrl/breaches');
+      
+      final response = await http.get(
+        url,
+        headers: {
+          'User-Agent': _userAgent,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        // Return only the 10 most recent breaches
+        return data
+            .take(10)
+            .map((breach) => _parseBreachData(breach))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching all breaches: $e');
+      return [];
+    }
+  }
 }
