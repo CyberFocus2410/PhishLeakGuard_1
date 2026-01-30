@@ -29,12 +29,21 @@ Analyze this content and provide a detailed security assessment. Look for:
 7. Mismatched sender information
 8. Threatening or pressure tactics
 
+If this is a scam, classify it into one of these categories:
+- "Bank Fraud": Impersonates banks or financial institutions
+- "Job Scam": Fake job offers or work-from-home schemes
+- "Delivery Scam": Fake package delivery notifications
+- "Romance Scam": Fake romantic interest for financial gain
+- "Investment Scam": Fake investment opportunities or crypto schemes
+- "Other": Any other type of scam
+
 Provide your analysis as a JSON object with:
 - "isSafe": boolean (true if safe, false if phishing/suspicious)
 - "riskScore": number 0-100 (0=safe, 100=critical danger)
 - "severity": string ("Low", "Medium", "High", or "Critical")
+- "scamType": string (one of the categories above, or null if safe)
+- "explanation": string (2-3 sentences in simple language explaining why it's dangerous or safe)
 - "threats": array of objects with "type", "title", "description", and "severity"
-- "summary": brief explanation of your assessment
 
 Be strict in your analysis - even subtle red flags should be noted.''';
 

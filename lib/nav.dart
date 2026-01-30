@@ -4,6 +4,7 @@ import 'package:phishleak_guard/pages/landing_page.dart';
 import 'package:phishleak_guard/pages/phish_shield_page.dart';
 import 'package:phishleak_guard/pages/leak_watch_page.dart';
 import 'package:phishleak_guard/pages/dashboard_page.dart';
+import 'package:phishleak_guard/pages/spam_caller_page.dart';
 
 /// GoRouter configuration for app navigation
 class AppRouter {
@@ -38,6 +39,13 @@ class AppRouter {
           child: DashboardPage(),
         ),
       ),
+      GoRoute(
+        path: AppRoutes.spamCaller,
+        name: 'spam-caller',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: SpamCallerPage(),
+        ),
+      ),
     ],
   );
 }
@@ -48,4 +56,5 @@ class AppRoutes {
   static const String phishShield = '/phish-shield';
   static const String leakWatch = '/leak-watch';
   static const String dashboard = '/dashboard';
+  static const String spamCaller = '/spam-caller';
 }

@@ -8,6 +8,8 @@ class PhishingAnalysisResult {
   final bool isSafe;
   final List<ThreatFlag> threats;
   final DateTime analyzedAt;
+  final String? scamType; // 'Bank Fraud', 'Job Scam', 'Delivery Scam', etc.
+  final String? explanation; // Simple explanation of why it's dangerous or safe
 
   PhishingAnalysisResult({
     required this.id,
@@ -18,6 +20,8 @@ class PhishingAnalysisResult {
     required this.isSafe,
     required this.threats,
     required this.analyzedAt,
+    this.scamType,
+    this.explanation,
   });
 
   Map<String, dynamic> toJson() => {
@@ -29,6 +33,8 @@ class PhishingAnalysisResult {
         'isSafe': isSafe,
         'threats': threats.map((t) => t.toJson()).toList(),
         'analyzedAt': analyzedAt.toIso8601String(),
+        'scamType': scamType,
+        'explanation': explanation,
       };
 
   factory PhishingAnalysisResult.fromJson(Map<String, dynamic> json) =>
@@ -43,6 +49,8 @@ class PhishingAnalysisResult {
             .map((t) => ThreatFlag.fromJson(t as Map<String, dynamic>))
             .toList(),
         analyzedAt: DateTime.parse(json['analyzedAt'] as String),
+        scamType: json['scamType'] as String?,
+        explanation: json['explanation'] as String?,
       );
 }
 

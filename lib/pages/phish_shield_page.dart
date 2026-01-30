@@ -5,6 +5,7 @@ import 'package:phishleak_guard/services/phishing_detection_service.dart';
 import 'package:phishleak_guard/services/history_service.dart';
 import 'package:phishleak_guard/components/risk_meter.dart';
 import 'package:phishleak_guard/components/threat_card.dart';
+import 'package:phishleak_guard/components/scam_type_badge.dart';
 import 'package:go_router/go_router.dart';
 
 /// PhishShield page for phishing detection
@@ -25,6 +26,31 @@ class _PhishShieldPageState extends State<PhishShieldPage> {
   PhishingAnalysisResult? _result;
 
   final List<Map<String, String>> _examples = [
+    // SAFE EXAMPLES
+    {
+      'type': 'email',
+      'content': '''Hi Team,
+
+Just a reminder about tomorrow\'s project meeting at 2 PM in Conference Room B.
+
+Agenda:
+- Q4 progress review
+- Budget planning
+- New feature discussion
+
+See you there!
+Best regards,
+Sarah''',
+    },
+    {
+      'type': 'sms',
+      'content': 'Hey! Running 10 mins late. See you at the coffee shop soon. -Mike',
+    },
+    {
+      'type': 'url',
+      'content': 'https://www.github.com/flutter/flutter',
+    },
+    // MALICIOUS EXAMPLES
     {
       'type': 'email',
       'content': '''Dear Customer,
@@ -38,11 +64,25 @@ PayPal Security Team''',
     },
     {
       'type': 'url',
-      'content': 'http://amaz0n-prize.xyz/claim-reward?winner=true',
+      'content': 'https://amaz0n-prize.xyz/claim-reward?winner=true&urgent=now',
     },
     {
       'type': 'sms',
       'content': 'URGENT: Your bank account has been locked. Click http://bit.ly/3xYz to verify your identity and unlock it immediately.',
+    },
+    {
+      'type': 'email',
+      'content': '''Congratulations!
+
+You\'ve been selected for a remote position at Google Inc. earning \$5,000/week from home!
+
+No experience needed. Just send \$99 for training materials to get started.
+
+Reply now to claim your position!''',
+    },
+    {
+      'type': 'sms',
+      'content': 'Your package delivery failed. Update shipping details at: fedx-tracking.net/update-delivery?id=8472',
     },
   ];
 
@@ -105,13 +145,39 @@ PayPal Security Team''',
     });
   }
 
+  IconData _getExampleIcon(String type) {
+    switch (type) {
+      case 'email':
+        return Icons.email;
+      case 'url':
+        return Icons.link;
+      case 'sms':
+        return Icons.message;
+      default:
+        return Icons.text_snippet;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.phishing, color: SecurityColors.danger),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    SecurityColors.danger.withValues(alpha: 0.2),
+                    SecurityColors.danger.withValues(alpha: 0.1),
+                  ],
+                ),
+                border: Border.all(color: SecurityColors.danger, width: 2),
+              ),
+              child: Icon(Icons.phishing, color: SecurityColors.danger, size: 20),
+            ),
             const SizedBox(width: AppSpacing.sm),
             const Text('PhishShield'),
           ],
@@ -124,22 +190,60 @@ PayPal Security Team''',
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              SecurityColors.danger.withValues(alpha: 0.05),
+              Theme.of(context).colorScheme.surface,
+              SecurityColors.danger.withValues(alpha: 0.03),
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
         padding: AppSpacing.paddingMd,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Input Section
-            Card(
-              child: Padding(
-                padding: AppSpacing.paddingLg,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Analyze Suspicious Content',
-                      style: context.textStyles.titleLarge?.semiBold,
-                    ),
+            // Input Section with gradient
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                gradient: LinearGradient(
+                  colors: [
+                    SecurityColors.danger.withValues(alpha: 0.15),
+                    SecurityColors.danger.withValues(alpha: 0.05),
+                  ],
+                ),
+                border: Border.all(color: SecurityColors.danger.withValues(alpha: 0.3)),
+              ),
+              child: Card(
+                color: Colors.transparent,
+                elevation: 0,
+                child: Padding(
+                  padding: AppSpacing.paddingLg,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.psychology, color: SecurityColors.danger),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'AI-Powered Analysis',
+                            style: context.textStyles.titleLarge?.semiBold,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '⚡ Paste URLs, emails, or SMS to detect phishing and classify scam types',
+                        style: context.textStyles.bodySmall?.semiBold.withColor(
+                          SecurityColors.danger.withValues(alpha: 0.8),
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.md),
                     
                     // Type selector
@@ -219,13 +323,15 @@ PayPal Security Team''',
                       runSpacing: AppSpacing.sm,
                       children: [
                         for (int i = 0; i < _examples.length; i++)
-                          TextButton(
+                          OutlinedButton.icon(
                             onPressed: () => _loadExample(i),
-                            child: Text('Example ${i + 1}'),
+                            icon: Icon(_getExampleIcon(_examples[i]['type']!)),
+                            label: Text('Example ${i + 1}'),
                           ),
                       ],
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -290,6 +396,53 @@ PayPal Security Team''',
                 ),
               ),
 
+              // Scam Type & Explanation
+              if (_result!.scamType != null || _result!.explanation != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Card(
+                  child: Padding(
+                    padding: AppSpacing.paddingLg,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_result!.scamType != null) ...[
+                          Row(
+                            children: [
+                              Icon(Icons.category, color: SecurityColors.danger, size: 20),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                'Scam Type',
+                                style: context.textStyles.titleMedium?.semiBold,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          ScamTypeBadge(scamType: _result!.scamType!),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        if (_result!.explanation != null) ...[
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, color: SecurityColors.info, size: 20),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                'What This Means',
+                                style: context.textStyles.titleMedium?.semiBold,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            _result!.explanation!,
+                            style: context.textStyles.bodyMedium,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
               // Threats Found
               if (_result!.threats.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.lg),
@@ -310,7 +463,7 @@ PayPal Security Team''',
             ],
           ],
         ),
-      ),
+      )),
     );
   }
 }
