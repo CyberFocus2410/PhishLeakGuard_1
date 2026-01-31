@@ -12,10 +12,10 @@ It combines **intelligent threat detection** with **clear, human-readable explan
 ## 🚀 LIVE APP DEMO
 
 🔗 **Live Demo:**  
-https://your-demo-link-here.com
+https://x566kk6n9vw7zlcq674y.share.dreamflow.app/
 
 📺 **Hackathon Demo Video:**  
-https://www.youtube.com/watch?v=YOUR_VIDEO_ID
+https://www.youtube.com/shorts/7LuR5XfZMXc
 
 > ℹ️ If the live demo is not publicly hosted, please refer to the demo video above.
 
