@@ -1,132 +1,175 @@
-# 🔐 PhishLeakGuard
+🛡️ PhishLeak Guard
 
-**PhishLeakGuard** is a cybersecurity-focused web application designed to help users  
-**identify phishing risks and check whether their email has been exposed in known data breaches**.
+PhishLeak Guard is an AI-powered, privacy-first cybersecurity application that protects users from modern digital threats such as phishing scams, data breaches, and spam/scam calls.
+It combines intelligent threat detection with clear explanations to help users stay safe online.
 
-The project focuses on **community cyber safety**, awareness, and prevention — helping users
-understand threats *before* damage occurs.
+🚀 Live App Demo
 
----
+🔗 Live Demo:
 
-## 🚀 Live Application
-
-🌐 **Live Demo (Hosted via Dreamflow)**  
 https://x566kk6n9vw7zlcq674y.share.dreamflow.app/
 
-> The frontend and backend are fully deployed and working via **Dreamflow**.
 
----
+📺 Hackathon Demo Video (YouTube):
 
-## 🛡️ What Problems Does PhishLeakGuard Solve?
+https://www.youtube.com/watch?v=YOUR_VIDEO_ID
 
-### 1️⃣ Data Breach Awareness (LeakWatch)
-- Checks whether an email address has been compromised in public data breaches
-- Uses **Have I Been Pwned** breach intelligence
-- No passwords or sensitive user data is stored
 
-### 2️⃣ Phishing Risk Awareness
-- Educates users about digital threats
-- Helps reduce phishing-related data loss
-- Built with a user-friendly, minimal interface
+ℹ️ If the live demo is not publicly hosted, please refer to the demo video above.
 
----
+🧠 Overview
 
-## ✨ Key Features
+With the rapid rise of phishing attacks, data leaks, and scam calls, most users are unaware of threats until damage is already done. Existing solutions are often fragmented, overly technical, or limited to a single threat type.
 
-- 🔍 **Email Breach Detection (LeakWatch)**
-- ⚠️ **Risk Severity Classification**
-- ☁️ **Serverless Backend**
-- 🌐 **Web-based UI (No installation required)**
-- 🔐 **Secure API handling**
-- 📦 **Production-ready deployment via Dreamflow**
+PhishLeak Guard addresses this gap by providing a unified, AI-driven security platform that detects, explains, and helps prevent digital threats in real time.
 
----
+🔐 Core Modules
+🛡️ PhishShield — Phishing Detection
 
-## 🧠 Tech Stack
+AI-powered analysis of messages, emails, and links
 
-### Frontend
-- Flutter (Web)
-- Responsive UI
-- Hosted using **Dreamflow**
+Scam classification (Bank, Job, Delivery, Romance, Investment, etc.)
 
-### Backend
-- Serverless Functions (via Dreamflow)
-- Secure API calls handled on the backend
+Risk scoring (0–100) with severity levels
 
-### Security & APIs
-- **Have I Been Pwned API** (for breach detection)
-- No API keys exposed on the frontend
+Plain-language threat explanations
 
----
+🧬 LeakWatch — Data Breach Monitoring
 
-## 🏗️ System Architecture
+Checks email addresses against known data breach databases
 
-User (Browser)
-↓
-Flutter Web UI
-↓
-Dreamflow Hosting
-↓
-Serverless Backend Logic
-↓
-Have I Been Pwned API
+Provides breach details and severity classification
 
-yaml
-Copy code
+Helps users take early preventive action
 
----
+📞 SpamGuard — Spam Caller Identification
 
-## 📂 Project Structure
+Pattern-based spam and scam number detection
 
-PhishLeakGuard/
-│
-├── lib/ # Flutter UI source code
-├── build/web/ # Production web build
-├── functions/ # Backend logic (serverless)
-├── assets/ # UI assets
-├── README.md # Project documentation
+Robocall and premium-rate number warnings
 
-yaml
-Copy code
+Architecture ready for external spam intelligence APIs
 
----
+✨ Key Features
 
-## 🔒 Privacy & Security
+AI-powered phishing and scam detection
 
-- ❌ No passwords collected
-- ❌ No email data stored permanently
-- ✅ Emails are checked securely and discarded after processing
-- ✅ API communication handled server-side
+Multi-threat protection in a single app
 
----
+Risk scoring with clear severity levels
 
-## 🧪 How LeakWatch Works
+Simple, human-readable explanations
 
-1. User enters an email address
-2. Request is sent to the backend
-3. Backend queries **Have I Been Pwned**
-4. Breach data is analyzed
-5. Severity level is calculated
-6. Results are shown clearly to the user
+Privacy-first design (no server-side data storage)
 
----
+Offline-first with fallback detection logic
 
-## 🏆 Use Cases
+Cross-platform support (Android, iOS, Web)
 
-- Cybersecurity awareness tools
-- Community digital safety initiatives
+Local history tracking for recent scans
 
----
+🧱 Tech Stack
+Frontend
 
-## 📌 Future Enhancements
+Flutter
 
-- URL phishing detection
-- SMS & message phishing analysis
-- Browser extension
-- User risk dashboard
-- Enterprise / SOC mode
+Dart
 
----
+Material Design 3 (dark cybersecurity theme)
+
+State & Navigation
+
+Provider
+
+go_router
+
+Shared Preferences (local caching)
+
+Backend & Cloud
+
+Firebase Core
+
+Firebase Authentication
+
+Cloud Functions
+
+Firestore Database
+
+AI & External APIs
+
+OpenAI GPT-4o API — phishing detection & explanations
+
+Have I Been Pwned API — data breach monitoring
+
+Spam intelligence APIs (architecture ready: Tellows / Twilio)
+
+🏗️ Architecture Overview
+User Input
+(Message / Link / Email / Phone Number)
+        ↓
+Local Validation & Offline Checks
+        ↓
+Secure Backend (Cloud Functions)
+        ↓
+AI & Intelligence Layer
+(GPT-4o + Security APIs)
+        ↓
+Risk Score & Scam Classification
+        ↓
+Plain-Language Explanation
+        ↓
+Local History Storage
+
+🔒 Privacy & Security Principles
+
+No permanent storage of user messages, links, or contacts
+
+Secure API communication
+
+Permission-based analysis
+
+Offline fallback mechanisms
+
+Graceful error handling and timeouts
+
+📱 Supported Platforms
+
+Android
+
+iOS
+
+Web (Flutter Web)
+
+📈 Future Enhancements
+
+Real-time SMS and email scanning
+
+Voice call scam detection (permission-based)
+
+Browser extension integration
+
+Dark web monitoring
+
+Community-driven threat intelligence
+
+Enterprise security mode
+
+🧪 Project Status
+
+This project is a hackathon-built, production-ready MVP, focused on demonstrating:
+
+AI integration
+
+Cybersecurity principles
+
+Privacy-first system design
+
+Scalable cloud architecture
+
+🤝 Contributing
+
+Contributions, suggestions, and improvements are welcome.
+Please open an issue or submit a pull request.
 
 ## 👤 Author
 
@@ -134,8 +177,7 @@ Copy code
 B.Tech CSE (Cyber Security)  
 Focused on building community-driven security solutions
 
----
 
-## 📜 License
+🛡️ Final Note
 
-This project is open-source and intended for **educational and community use**.
+PhishLeak Guard doesn’t just warn users — it educates, protects, and prevents digital threats before trust is exploited.
